@@ -6,6 +6,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from flagapi import settings
+
 nltk.download('gutenberg')
 
 TASKS = ("flagit",)
@@ -30,7 +32,19 @@ WORDS = [porter.stem(w) for w in WORDS]
 # WORDS = [lancaster.stem(w) for w in WORDS]
 
 
-def flagit(sentence=""):
+def replace_names(sentence="", to_replace="X"):
+    tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
+    words = [w.lower() for w in tokenizer.tokenize(sentence.lower())]
+    res = set(words).intersection(settings.FIRST_NAMES)
+    if len(res) > 0:
+        for w in res:
+            sentence = sentence.replace(w.lower(), to_replace*(len(w)))
+            sentence = sentence.replace(w.upper(), to_replace*(len(w)))
+            sentence = sentence.replace(w.title(), to_replace * (len(w)))
+    return sentence
+
+
+def flag_it(sentence=""):
     words = [porter.stem(w) for w in sentence.split()]
     # words = [lancaster.stem(w) for w in sentence.split()]
     res = set(words).intersection(set(WORDS))
@@ -63,7 +77,8 @@ class FirstApi(APIView):
 
             answer = {"task": inquiry.task, "sentences": []}
             for sentence in inquiry.sentences:
-                flag = flagit(sentence)
+                sentence = replace_names(sentence, "X")
+                flag = flag_it(sentence)
                 answer["sentences"].append((sentence, flag))
             content = answer
         return Response(content)

@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import codecs
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -129,3 +129,10 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
 }
+
+FIRST_NAMES = [name.replace("\r\n", "") for name in
+               codecs.open(BASE_DIR+"\\data\\first_names.txt", "r", encoding="utf-8").readlines()]
+LAST_NAMES = [name.replace("\r\n", "") for name in
+              codecs.open(BASE_DIR+"\\data\\last_names.txt", "r", encoding="utf-8").readlines()]
+NO_NAMES = [name.replace("\r\n", "") for name in
+            codecs.open(BASE_DIR+"\\data\\no_names.txt", "r", encoding="utf-8").readlines()]
