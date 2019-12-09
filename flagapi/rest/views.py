@@ -10,7 +10,7 @@ from flagapi import settings
 
 nltk.download('gutenberg')
 
-TASKS = ("flagit",)
+TASKS = ("flag_it",)
 
 porter = nltk.PorterStemmer()
 # lancaster = nltk.LancasterStemmer()
