@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import codecs
 
+from decouple import config
+
+from flagapi.core.views import line_breaker
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -40,6 +45,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
 
+    'flagapi.core',
     'flagapi.rest',
 ]
 
@@ -130,9 +136,22 @@ REST_FRAMEWORK = {
     ],
 }
 
-FIRST_NAMES = [name.replace("\r\n", "") for name in
-               codecs.open(BASE_DIR+"\\data\\first_names.txt", "r", encoding="utf-8").readlines()]
-LAST_NAMES = [name.replace("\r\n", "") for name in
-              codecs.open(BASE_DIR+"\\data\\last_names.txt", "r", encoding="utf-8").readlines()]
-NO_NAMES = [name.replace("\r\n", "") for name in
-            codecs.open(BASE_DIR+"\\data\\no_names.txt", "r", encoding="utf-8").readlines()]
+
+# Loading files
+
+FIRST_NAMES = [name.replace(line_breaker(name), "") for name in
+               codecs.open(BASE_DIR + os.path.sep + "data" + os.path.sep + "first_names.txt",
+                           "r", encoding="utf-8").readlines()]
+LAST_NAMES = [name.replace(line_breaker(name), "") for name in
+              codecs.open(BASE_DIR + os.path.sep + "data" + os.path.sep + "last_names.txt",
+                          "r", encoding="utf-8").readlines()]
+NO_NAMES = [name.replace(line_breaker(name), "") for name in
+            codecs.open(BASE_DIR + os.path.sep + "data" + os.path.sep + "no_names.txt",
+                        "r", encoding="utf-8").readlines()]
+
+# Stemmer
+
+STEMMER = config('STEMMER', default='porter')
+
+if STEMMER not in ['porter', 'lancaster']:
+    STEMMER = 'porter'

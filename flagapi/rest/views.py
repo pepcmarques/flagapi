@@ -9,11 +9,14 @@ from rest_framework.views import APIView
 from flagapi import settings
 
 nltk.download('gutenberg')
+nltk.download('punkt')
 
 TASKS = ("flag_it",)
 
-porter = nltk.PorterStemmer()
-# lancaster = nltk.LancasterStemmer()
+if settings.STEMMER == 'porter':
+    stemmer = nltk.PorterStemmer()
+elif settings.STEMMER == 'lancaster':
+    stemmer = nltk.LancasterStemmer()
 
 WORDS = ["abuse", "afflict", "agonize", "alienate", "antagonize", "asphyxiate", "bash", "batter", "beat", "beguile",
          "belittle", "bite", "brawl", "break", "bruise", "burn", "butcher", "castigate", "chastise", "choke", "claw",
@@ -28,13 +31,13 @@ WORDS = ["abuse", "afflict", "agonize", "alienate", "antagonize", "asphyxiate", 
          "thrash", "threaten", "throw", "tire", "torment", "torture", "track", "victimize", "weary", "weep", "worry",
          "yell"]
 
-WORDS = [porter.stem(w) for w in WORDS]
-# WORDS = [lancaster.stem(w) for w in WORDS]
+WORDS = [stemmer.stem(w) for w in WORDS]
 
 
 def replace_names(sentence="", to_replace="X"):
-    tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
-    words = [w.lower() for w in tokenizer.tokenize(sentence.lower())]
+    # tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
+    # words = [w.lower() for w in tokenizer.tokenize(sentence.lower())]
+    words = [w.lower() for w in nltk.word_tokenize(sentence.lower())]
     res = set(words).intersection(settings.FIRST_NAMES)
     if len(res) > 0:
         for w in res:
@@ -45,8 +48,8 @@ def replace_names(sentence="", to_replace="X"):
 
 
 def flag_it(sentence=""):
-    words = [porter.stem(w) for w in sentence.split()]
-    # words = [lancaster.stem(w) for w in sentence.split()]
+    words = [stemmer.stem(w) for w in nltk.word_tokenize(sentence.lower())]
+
     res = set(words).intersection(set(WORDS))
     if len(res) > 0:
         return True
@@ -59,7 +62,7 @@ class FirstApi(APIView):
     """
     renderer_classes = [JSONRenderer]
 
-    def post(self, request):
+    def get(self, request):
         data = request.data
         if not data:
             content = {"error": "no data received"}
