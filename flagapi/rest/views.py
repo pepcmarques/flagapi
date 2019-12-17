@@ -62,7 +62,7 @@ class FirstApi(APIView):
     """
     renderer_classes = [JSONRenderer]
 
-    def get(self, request):
+    def post(self, request):
         data = request.data
         if not data:
             content = {"error": "no data received"}
