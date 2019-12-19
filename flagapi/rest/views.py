@@ -1,17 +1,18 @@
 import nltk
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from flagapi import settings
+from flagapi.classify.models import ClassificationChoices, ClassifiedSentences
 
 nltk.download('gutenberg')
 nltk.download('punkt')
 
-TASKS = ("flag_it",)
+TASKS = ("flag_it", "flag_ml")
 
 if settings.STEMMER == 'porter':
     stemmer = nltk.PorterStemmer()
@@ -32,6 +33,38 @@ WORDS = ["abuse", "afflict", "agonize", "alienate", "antagonize", "asphyxiate", 
          "yell"]
 
 WORDS = [stemmer.stem(w) for w in WORDS]
+
+
+def get_words_in_database():
+    words = []
+    documents_tmp = defaultdict(list)
+    documents = []
+    sentences = ClassifiedSentences.objects.all()
+    for sentence_obj in sentences:
+        ws = nltk.word_tokenize(sentence_obj.sentence.lower())
+        words.extend(ws)
+        documents_tmp[sentence_obj.classification.__str__()].extend(ws)
+    for cl in documents_tmp:
+        documents_tmp[cl] = set(documents_tmp[cl])
+    for k, v in documents_tmp.items():
+        documents.append((v, k))
+    return words, documents
+
+
+def get_classification_choices():
+    cl_choices = {}
+    choices = ClassificationChoices.objects.all()
+    for choice_obj in choices:
+        cl_choices[choice_obj.classification.__str__()] = str(choice_obj.pk)
+    return cl_choices
+
+
+def document_features(document, word_feats):
+    features = {}
+    for word in word_feats:
+        features[word] = (word in document)
+        # features['contains(%s)' % word] = (word in document_words)
+    return features
 
 
 def replace_names(sentence="", to_replace="X"):
@@ -56,10 +89,7 @@ def flag_it(sentence=""):
     return False
 
 
-class FirstApi(APIView):
-    """
-    A view that returns the count of active users in JSON.
-    """
+class SimpleClassificationApi(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
@@ -79,9 +109,66 @@ class FirstApi(APIView):
                 return Response(content)
 
             answer = {"task": inquiry.task, "sentences": []}
+
             for sentence in inquiry.sentences:
                 sentence = replace_names(sentence, "X")
                 flag = flag_it(sentence)
                 answer["sentences"].append((sentence, flag))
             content = answer
+        return Response(content)
+
+
+def bag_of_words(words):
+    return dict([w.lower(), True] for w in words if w not in nltk.corpus.stopwords.words('english'))
+
+
+def classify_sentences(sentences=[]):
+    WORDS_IN_DATABASE, DOCUMENTS_IN_DATABASE = get_words_in_database()
+    ALL_WORDS = nltk.FreqDist(w.lower() for w in WORDS_IN_DATABASE)
+    WORD_FEATURES = ALL_WORDS.keys()
+    TRAIN_SET = [(document_features(d, WORD_FEATURES), c) for (d, c) in DOCUMENTS_IN_DATABASE]
+    CLASSIFIER = nltk.NaiveBayesClassifier.train(TRAIN_SET)
+
+    to_return = []
+    for sentence in sentences:
+        words = nltk.tokenize.word_tokenize(sentence)
+        feats = bag_of_words(words)
+        classify = CLASSIFIER.classify(feats)
+        to_return.append((sentence, classify))
+
+    return to_return
+
+
+class MachineLearningClassificationApi(APIView):
+    renderer_classes = [JSONRenderer]
+
+    def post(self, request):
+        CLASSIFICATION_CHOICES = get_classification_choices()
+
+        data = request.data
+        if not data:
+            content = {"error": "no data received"}
+        else:
+            create_inquiry = namedtuple("Inquiry", "task sentences")
+            try:
+                inquiry = create_inquiry(**data)
+            except TypeError:
+                content = {"error": "data format error"}
+                return Response(content)
+
+            if inquiry.task not in TASKS:
+                content = {"error": "task not recognized"}
+                return Response(content)
+
+            l_classifications = classify_sentences(inquiry.sentences)
+
+            answer = []
+            for l_cl in l_classifications:
+                if l_cl[0] == "":
+                    answer.append((l_cl[0], "0"))
+                else:
+                    answer.append((l_cl[0], CLASSIFICATION_CHOICES[l_cl[1]]))
+
+            content = {"result": answer}
+
         return Response(content)
