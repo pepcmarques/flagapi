@@ -4,5 +4,6 @@ from flagapi.rest import views
 app_name = 'rest'
 
 urlpatterns = [
-    path('', views.FirstApi.as_view(), name='first'),
+    path('simple/', views.SimpleClassificationApi.as_view(), name='simple_classification'),
+    path('ml/', views.MachineLearningClassificationApi.as_view(), name='machine_classification'),
 ]

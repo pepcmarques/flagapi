@@ -1,0 +1,45 @@
+{% extends 'base.html'%}
+
+{% load crispy_forms_tags %}
+
+{% load static %}
+
+{% block jumbo %}
+{% endblock jumbo %}
+
+{% block section %}
+	<form method="post">
+		{% csrf_token %}
+		{{ form|crispy }}
+		<button type="submit" class="btn btn-primary">Submit</button>
+	</form>
+{% endblock section %}
+
+{% block javascript %}
+<script type="text/javascript">
+	window.onload=function() {
+  		document.getElementById("id_sentence").onchange=function() {
+
+			const Http = new XMLHttpRequest();
+
+			const url='{% url 'rest:machine_classification' %}';
+
+			Http.open("POST", url);
+			Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			Http.send(JSON.stringify({ "task": "flag_ml",
+										"sentences": [document.getElementById("id_sentence").value] }));
+
+			Http.onreadystatechange = function() {
+    			if (this.readyState == 4 && this.status == 200) {
+        			var myArr = JSON.parse(this.responseText);
+        			//console.log(myArr);
+        			//console.log(myArr["result"][0][1])
+        			document.getElementById("id_classification").value=myArr["result"][0][1];
+    			}
+			};
+
+  		}
+  		document.getElementById("id_sentence").onchange(); // trigger when loading
+	}
+</script>
+{% endblock javascript %}
