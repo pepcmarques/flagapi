@@ -12,7 +12,7 @@ def test_replace_name(client, task, sentence, expected):
     data = {"task": task,
             "sentences": [sentence]
             }
-    url = urls.reverse('rest:first')
+    url = urls.reverse('rest:simple_classification')
     response = client.post(url, json.dumps(data), content_type="application/json")
     response_data = response.data
     flag = response_data["sentences"][0][0]
@@ -21,7 +21,7 @@ def test_replace_name(client, task, sentence, expected):
 
 @pytest.mark.parametrize("expected", ["no data received"])
 def test_no_data_received(client, expected):
-    url = urls.reverse('rest:first')
+    url = urls.reverse('rest:simple_classification')
     response = client.post(url, "", content_type="application/json")
     response_data = response.data
     error = response_data["error"]
@@ -34,7 +34,7 @@ def test_no_data_received(client, expected):
 )
 def test_wrong_json_structure(client, task, expected):
     data = {"task": task}
-    url = urls.reverse('rest:first')
+    url = urls.reverse('rest:simple_classification')
     response = client.post(url, json.dumps(data), content_type="application/json")
     response_data = response.data
     error = response_data["error"]
@@ -51,7 +51,7 @@ def test_sentence(client, task, sentence, expected):
     data = {"task": task,
             "sentences": [sentence]
             }
-    url = urls.reverse('rest:first')
+    url = urls.reverse('rest:simple_classification')
     response = client.post(url, json.dumps(data), content_type="application/json")
     response_data = response.data
     try:
