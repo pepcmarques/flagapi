@@ -11,6 +11,7 @@ from flagapi.classify.models import ClassificationChoices, ClassifiedSentences
 
 nltk.download('gutenberg')
 nltk.download('punkt')
+nltk.download('stopwords')
 
 TASKS = ("flag_it", "flag_ml")
 
