@@ -13,7 +13,7 @@ nltk.download('gutenberg')
 nltk.download('punkt')
 nltk.download('stopwords')
 
-TASKS = ("flag_it", "flag_ml")
+TASKS = ("flag_it", "flag_ml", "include")
 
 if settings.STEMMER == 'porter':
     stemmer = nltk.PorterStemmer()
@@ -169,6 +169,60 @@ class MachineLearningClassificationApi(APIView):
                     answer.append((l_cl[0], "0"))
                 else:
                     answer.append((l_cl[0], CLASSIFICATION_CHOICES[l_cl[1]]))
+
+            content = {"result": answer}
+
+        return Response(content)
+
+
+class IncludeClassificationApi(APIView):
+    renderer_classes = [JSONRenderer]
+
+    def post(self, request):
+        CLASSIFICATION_CHOICES = get_classification_choices()
+
+        data = request.data
+        if not data:
+            content = {"error": "no data received"}
+        else:
+            create_inquiry = namedtuple("Inquiry", "task sentences")
+            try:
+                inquiry = create_inquiry(**data)
+            except TypeError:
+                content = {"error": "data format error"}
+                return Response(content)
+
+            if inquiry.task not in TASKS:
+                content = {"error": "task not recognized"}
+                return Response(content)
+
+            answer = []
+
+            for sentence in inquiry.sentences:
+                try:
+                    s, c = sentence
+                except (ValueError, TypeError):
+                    content = {"error": "sentence format must be ['sentence', 'classification']"}
+                    return Response(content)
+
+                c_value = CLASSIFICATION_CHOICES.get(c, 'not found')
+
+                if c_value == 'not found':
+                    answer.append((s, "classification not found"))
+                    continue
+
+                try:
+                    obj = ClassifiedSentences.objects.get(sentence=s)
+                    if str(obj.classification) == c:
+                        answer.append((s, "sentence already exists with '%s' classification" % c))
+                        continue
+                    msg = "sentence was updated with '%s' classification" % c
+                except ClassifiedSentences.DoesNotExist:
+                    obj = ClassifiedSentences(sentence=s, classification=ClassificationChoices(c_value))
+                    msg = "sentence was included with '%s' classification" % c
+
+                obj.save()
+                answer.append((s, msg))
 
             content = {"result": answer}
 

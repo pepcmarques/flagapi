@@ -10,7 +10,7 @@
 {% block section %}
 <form method="post">
     {% csrf_token %}
-    <p>Are you sure you want to delete this classification - '{{ object.classification }}' ?</p>
+    <p>Are you sure you want to delete this sentence - '{{ object.sentence }}' classified as '{{ object.classification }}'?</p>
     <button class="btn btn-primary">Submit</button>
     <button type="button" class="btn btn-secondary" onclick="window.history.back();">Cancel</button>
 </form>
