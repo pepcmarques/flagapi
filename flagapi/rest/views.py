@@ -170,7 +170,7 @@ class MachineLearningClassificationApi(APIView):
                 else:
                     answer.append((l_cl[0], CLASSIFICATION_CHOICES[l_cl[1]]))
 
-            content = {"result": answer}
+            content = {"result": answer, "choices": CLASSIFICATION_CHOICES}
 
         return Response(content)
 
