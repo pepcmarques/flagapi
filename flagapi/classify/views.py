@@ -41,11 +41,8 @@ class ClassificationDelete(DeleteView):
 class ClassifiedSentencesList(ListView):
     model = ClassifiedSentences
     context_object_name = 'message_list'
-    # paginate_by = 10
-    ordering = ['classification']
-
-    def get_queryset(self):
-        return ClassifiedSentences.objects.all()
+    paginate_by = 50
+    ordering = ["classification", "sentence"]
 
 
 class ClassifiedSentencesCreate(CreateView):
