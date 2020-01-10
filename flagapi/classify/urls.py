@@ -15,8 +15,10 @@ urlpatterns = [
 
     path('classified_sentences/', ClassifiedSentencesList.as_view(), name='classified_sentences_list'),
     path('classified_sentences/create/', ClassifiedSentencesCreate.as_view(), name='classified_sentences_create'),
-    path('classified_sentences/update/<int:pk>', ClassifiedSentencesUpdate.as_view(), name='classified_sentences_update'),
-    path('classified_sentences/delete/<int:pk>', ClassifiedSentencesDelete.as_view(), name='classified_sentences_delete'),
+    path('classified_sentences/update/<int:pk>', ClassifiedSentencesUpdate.as_view(),
+         name='classified_sentences_update'),
+    path('classified_sentences/delete/<int:pk>', ClassifiedSentencesDelete.as_view(),
+         name='classified_sentences_delete'),
 
     path('submit_sentence/', SubmitSentenceView.as_view(), name='submit_sentence'),
     path('automatic_classification/<str:sentence>', AutomaticClassificationView.as_view(),

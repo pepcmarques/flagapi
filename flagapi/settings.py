@@ -11,12 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import codecs
-
 from decouple import config
-
-from flagapi.core.views import line_breaker
-
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -155,15 +150,14 @@ REST_FRAMEWORK = {
 
 # Loading files
 
-FIRST_NAMES = [name.replace(line_breaker(name), "") for name in
-               codecs.open(BASE_DIR + os.path.sep + "data" + os.path.sep + "first_names.txt",
-                           "r", encoding="utf-8").readlines()]
-LAST_NAMES = [name.replace(line_breaker(name), "") for name in
-              codecs.open(BASE_DIR + os.path.sep + "data" + os.path.sep + "last_names.txt",
-                          "r", encoding="utf-8").readlines()]
-NO_NAMES = [name.replace(line_breaker(name), "") for name in
-            codecs.open(BASE_DIR + os.path.sep + "data" + os.path.sep + "no_names.txt",
-                        "r", encoding="utf-8").readlines()]
+with open(os.path.join(STATICFILES_DIRS[0],  "data") + os.path.sep + "first_names.txt", "r", encoding="utf-8") as fn:
+    FIRST_NAMES = fn.read().splitlines()
+
+with open(os.path.join(STATICFILES_DIRS[0],  "data") + os.path.sep + "last_names.txt", "r", encoding="utf-8") as ln:
+    LAST_NAMES = ln.read().splitlines()
+
+with open(os.path.join(STATICFILES_DIRS[0],  "data") + os.path.sep + "no_names.txt", "r", encoding="utf-8") as nn:
+    NO_NAMES = nn.read().splitlines()
 
 # Stemmer
 
